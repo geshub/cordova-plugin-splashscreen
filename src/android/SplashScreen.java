@@ -329,13 +329,16 @@ public class SplashScreen extends CordovaPlugin {
                 // Inspirated in https://github.com/apache/cordova-plugin-splashscreen/pull/124/files
                 String statusBarColor = preferences.getString("SplashStatusBarBackgroundColor", "#000000");
 
-                if (statusBarColor != null && !statusBarColor.isEmpty() && Build.VERSION.SDK_INT >= 19) {
+                if (statusBarColor != null && !statusBarColor.isEmpty() && Build.VERSION.SDK_INT >= 21) {
 
-                    splashWindow.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                    splashWindow.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                    splashWindow.clearFlags(0x04000000); // SDK 19: WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                    splashWindow.addFlags(0x80000000); // SDK 21: WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
                     try {
                         // Using reflection makes sure any 5.0+ device will work without having to compile with SDK level 21
-                        splashWindow.getClass().getDeclaredMethod("setStatusBarColor", int.class).invoke(splashWindow, Color.parseColor(statusBarColor));
+                        //splashWindow.getClass().getDeclaredMethod("setStatusBarColor", int.class).invoke(splashWindow, Color.parseColor(statusBarColor));
+                        splashWindow.getClass().getMethod("setStatusBarColor", int.class).invoke(splashWindow, Color.parseColor(statusBarColor));
+                    } catch (IllegalArgumentException ignore) {
+                        LOG.e(TAG, "Invalid hexString argument, use f.i. '#999999'");
                     } catch (Exception ignore) {
                         // this should not happen, only in case Android removes this method in a version > 21
                         LOG.w("SplashScreen StatusBarColor", "Method window.setStatusBarColor not found for SDK level " + Build.VERSION.SDK_INT);
